@@ -1,0 +1,216 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "data": {
+    "url": "https://raw.githubusercontent.com/SimonRamone/info-vis-assignment/main/food_consumption.csv"
+  },
+  "transform": [
+    {"filter": "datum.consumption > 0"},
+    {"filter": "datum.co2_emissions > 0"}
+  ],
+  "title": {
+    "text": "Dietary Carbon Footprints Around The World",
+    "fontSize": 32,
+    "anchor": "middle"
+  },
+  "hconcat": [
+    {
+      "height": 500,
+      "width": 780,
+      "layer": [
+        {
+          "data": {
+            "url": "https://raw.githubusercontent.com/deldersveld/topojson/master/world-countries-sans-antarctica.json",
+            "format": {"type": "topojson", "feature": "countries1"}
+          },
+          "mark": {"type": "geoshape", "stroke": "black", "fill": "lightgray"}
+        },
+        {
+          "transform": [
+            {"filter": {"param": "bar_selection"}},
+            {
+              "joinaggregate": [
+                {"op": "sum", "field": "co2_emissions", "as": "Total CO2"}
+              ],
+              "groupby": ["country"]
+            },
+            {
+              "joinaggregate": [
+                {"op": "sum", "field": "consumption", "as": "totalConsumption"}
+              ],
+              "groupby": ["country"]
+            },
+            {
+              "lookup": "country",
+              "from": {
+                "data": {
+                  "url": "https://raw.githubusercontent.com/deldersveld/topojson/master/world-countries-sans-antarctica.json",
+                  "format": {"type": "topojson", "feature": "countries1"}
+                },
+                "key": "properties.name"
+              },
+              "as": "geo"
+            }
+          ],
+          "params": [
+            {
+              "name": "country_selection",
+              "select": {"type": "point", "fields": ["country"]}
+            }
+          ],
+          "mark": {"type": "geoshape", "stroke": "black"},
+          "projection": {"type": "mercator"},
+          "encoding": {
+            "shape": {"field": "geo", "type": "geojson"},
+            "color": {
+              "condition": {
+                "param": "country_selection",
+                "field": "Total CO2",
+                "type": "quantitative",
+                "scale": {"scheme": "lighttealblue"}
+              },
+              "value": "lightgrey"
+            },
+            "tooltip": [
+              {"field": "country", "type": "nominal", "title": "Country"},
+              {
+                "field": "Total CO2",
+                "type": "quantitative",
+                "title": "CO2 Emissions (kgCO2/person/year)"
+              },
+              {
+                "field": "totalConsumption",
+                "type": "quantitative",
+                "title": "Consumption (kg/person/year)"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "CO2 Emissions",
+      "width": 200,
+      "height": 500,
+      "params": [
+        {
+          "name": "bar_selection",
+          "select": {
+            "type": "point",
+            "fields": ["food_category"],
+            "encodings": ["y"]
+          }
+        }
+      ],
+      "transform": [{"filter": {"param": "country_selection"}}],
+      "mark": {
+        "type": "bar",
+        "yOffset": 5,
+        "cornerRadiusEnd": 2,
+        "height": {"band": 0.5}
+      },
+      "encoding": {
+        "y": {
+          "field": "food_category",
+          "type": "nominal",
+          "sort": "-x",
+          "title": null,
+          "scale": {"padding": 0},
+          "axis": {
+            "bandPosition": 0,
+            "grid": true,
+            "domain": false,
+            "ticks": false,
+            "labelAlign": "left",
+            "labelBaseline": "middle",
+            "labelFontWeight": "bold",
+            "labelPadding": -5,
+            "labelOffset": -15,
+            "titleX": 5,
+            "titleY": -5,
+            "titleAngle": 0,
+            "titleAlign": "left"
+          }
+        },
+        "x": {
+          "field": "co2_emissions",
+          "title": "kgCO2/person/year",
+          "axis": {"labelFontWeight": "bold"},
+          "aggregate": "average"
+        },
+        "color": {
+          "condition": {
+            "param": "bar_selection",
+            "field": "food_category",
+            "type": "nominal",
+            "legend": null,
+            "scale": {"range": ["#73B0BF"]}
+          },
+          "value": "lightgrey"
+        }
+      }
+    },
+    {
+      "title": "Consumption",
+      "width": 200,
+      "height": 500,
+      "params": [
+        {
+          "name": "bar_selection",
+          "select": {
+            "type": "point",
+            "fields": ["food_category"],
+            "encodings": ["y"]
+          }
+        }
+      ],
+      "transform": [{"filter": {"param": "country_selection"}}],
+      "mark": {
+        "type": "bar",
+        "yOffset": 5,
+        "cornerRadiusEnd": 2,
+        "height": {"band": 0.5}
+      },
+      "encoding": {
+        "y": {
+          "field": "food_category",
+          "type": "nominal",
+          "sort": "-x",
+          "title": null,
+          "scale": {"padding": 0},
+          "axis": {
+            "bandPosition": 0,
+            "grid": true,
+            "domain": false,
+            "ticks": false,
+            "labelAlign": "left",
+            "labelBaseline": "middle",
+            "labelPadding": -5,
+            "labelOffset": -15,
+            "labelFontWeight": "bold",
+            "titleX": 5,
+            "titleY": -5,
+            "titleAngle": 0,
+            "titleAlign": "left"
+          }
+        },
+        "x": {
+          "field": "consumption",
+          "title": "kg/person/year",
+          "aggregate": "average",
+          "axis": {"labelFontWeight": "bold"}
+        },
+        "color": {
+          "condition": {
+            "param": "bar_selection",
+            "field": "food_category",
+            "type": "nominal",
+            "legend": null,
+            "scale": {"range": ["#73B0BF"]}
+          },
+          "value": "lightgrey"
+        }
+      }
+    }
+  ],
+  "config": {"legend": {"orient": "bottom-left"}}
+}
